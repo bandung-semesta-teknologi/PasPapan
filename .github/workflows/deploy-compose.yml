@@ -1,0 +1,107 @@
+name: Deploy with Docker Compose
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Docker Compose to production
+    if: >
+      (github.event_name == 'workflow_dispatch' &&
+       github.ref == 'refs/heads/main-vps') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main-vps' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    concurrency:
+      group: paspapan-compose-production
+      cancel-in-progress: false
+
+    env:
+      DEPLOY_PATH: /var/www/paspapan-compose
+
+    steps:
+      - name: Check out the tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Configure pinned SSH host key
+        env:
+          DEPLOY_HOST: ${{ secrets.HOST }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          ssh-keygen -F "$DEPLOY_HOST" -f "$HOME/.ssh/known_hosts" >/dev/null
+
+      - name: Check deployment host prerequisites
+        env:
+          DEPLOY_HOST: ${{ secrets.HOST }}
+          DEPLOY_USER: ${{ secrets.USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "mkdir -p '${DEPLOY_PATH}' && \
+             command -v rsync >/dev/null && \
+             docker compose version && \
+             docker network inspect proxy >/dev/null && \
+             test -f '${DEPLOY_PATH}/.env'"
+
+      - name: Upload source and Compose files
+        env:
+          DEPLOY_HOST: ${{ secrets.HOST }}
+          DEPLOY_USER: ${{ secrets.USER }}
+        run: |
+          rsync -az --delete \
+            --exclude='/.env' \
+            --filter='protect /.env' \
+            --exclude='/.git/' \
+            --exclude='/.github/' \
+            --exclude='/vendor/' \
+            --exclude='/node_modules/' \
+            --exclude='/storage/' \
+            --exclude='/tests/' \
+            --exclude='/test-results/' \
+            --exclude='/screenshots/' \
+            --exclude='/android/' \
+            --exclude='/ios/' \
+            --exclude='/capacitor-www/' \
+            --exclude='/docs/' \
+            --exclude='/secure_tools/' \
+            --exclude='/enterprise_build/' \
+            -e "ssh -o StrictHostKeyChecking=yes" \
+            ./ "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}/"
+
+      - name: Build and start the Compose stack
+        env:
+          DEPLOY_HOST: ${{ secrets.HOST }}
+          DEPLOY_USER: ${{ secrets.USER }}
+        run: |
+          if ! ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cd '${DEPLOY_PATH}' && \
+             docker compose build --pull app web && \
+             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 600 && \
+             docker compose ps"; then
+            ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+              "cd '${DEPLOY_PATH}' && docker compose ps && docker compose logs --tail=100 app web queue scheduler db" || true
+            exit 1
+          fi

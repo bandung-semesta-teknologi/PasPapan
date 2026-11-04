@@ -94,6 +94,8 @@ Panduan lengkap ada di [guides/deployment.md](./guides/deployment.md) dan [guide
 
 ## Mulai Cepat
 
+Untuk deployment dengan Docker Compose, PostgreSQL, worker, scheduler, dan Caddy pada network Docker `proxy`, lihat [panduan Docker](docker/README.md).
+
 ```bash
 git clone https://github.com/RiprLutuk/PasPapan.git
 cd PasPapan

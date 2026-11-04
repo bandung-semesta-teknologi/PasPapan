@@ -1,0 +1,14 @@
+:80 {
+	encode zstd gzip
+
+	handle_path /storage/* {
+		root * /var/www/html/storage/app/public
+		file_server
+	}
+
+	handle {
+		root * /var/www/html/public
+		php_fastcgi app:9000
+		file_server
+	}
+}

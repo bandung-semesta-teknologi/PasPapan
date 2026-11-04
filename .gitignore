@@ -27,6 +27,7 @@ yarn-error.log
 /resources/views/emails/license-key.blade.php
 /database/migrations/2026_02_25_000001_create_license_purchases_table.php
 *.sh
+!docker/entrypoint.sh
 !update.sh
 !scripts/apk-attendance-e2e.sh
 !scripts/collect-review-evidence.sh
