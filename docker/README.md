@@ -5,7 +5,7 @@ This Compose setup builds a small PHP-FPM image and a separate Caddy image. Bun,
 ## First start
 
 1. Copy `.env.example` to `.env`.
-2. Set a strong `DB_PASSWORD` and set `APP_ENV=production`, `APP_DEBUG=false`, and `APP_URL` in `.env`.
+2. Set `APP_DOMAIN` to the public hostname (without scheme), `APP_URL=https://<APP_DOMAIN>`, a stable `APP_KEY`, and a strong `DB_PASSWORD` in `.env`.
 3. Create the shared network once if it does not already exist:
 
    ```sh
@@ -36,7 +36,7 @@ The production-safe seeder does not create the default bootstrap admin accounts 
 
 ## Reverse proxy
 
-The `web` Caddy service joins the external Docker network named `proxy` and has the network alias `paspapan`. Configure a reverse proxy already attached to that network to use `paspapan:80`. For another Caddy service, the upstream can be:
+The `web` Caddy service joins the external Docker network named `proxy` and has the network alias `paspapan`. Its Caddyfile serves only `http://{$APP_DOMAIN}`, serves public assets, and forwards PHP requests to PHP-FPM at `app:9000`. Configure the existing public reverse proxy attached to `proxy` with the same hostname and use `paspapan:80` as its upstream. For another Caddy service, use:
 
 ```caddyfile
 your-domain.example {
@@ -44,7 +44,7 @@ your-domain.example {
 }
 ```
 
-The bundled Caddy service listens on HTTP and serves the built public assets; the other proxy can terminate TLS. For local access, open `http://127.0.0.1:8080`; the bundled service binds that port on loopback only. Set `APP_HTTP_PORT` in `.env` to change it.
+The existing public proxy can terminate TLS. Set `APP_DOMAIN` in `.env` to the same bare hostname (`your-domain.example` in the example); the Compose workflow derives Laravel's `APP_URL` as `https://<APP_DOMAIN>`. For local access, open `http://127.0.0.1:8080`; the bundled service binds that port on loopback only. Set `APP_HTTP_PORT` in `.env` to change it.
 
 ## Operations
 
@@ -58,22 +58,35 @@ docker compose down
 
 ## GitHub Actions deployment
 
-`.github/workflows/deploy-compose.yml` deploys after a successful CI push to `main-vps`. It syncs the source to `/var/www/paspapan-compose`, builds the `app` and `web` images on the VPS, then runs `docker compose up` and waits for the services to become healthy. It does not use GHCR.
+`.github/workflows/deploy-compose.yml` deploys after a successful CI push to `main-vps`, or by manual dispatch from the selected branch. It writes `.env` from the `production` GitHub Environment, syncs source to `DEPLOY_PATH`, builds the `app` and `web` images on the VPS, then runs `docker compose up` and waits for the services to become healthy. It does not use GHCR.
 
 Prepare the VPS before enabling the workflow:
 
 - Install Docker Engine with the Docker Compose plugin v2.20 or newer, plus `rsync`.
-- Give the SSH deploy user permission to run `docker` and write to `/var/www/paspapan-compose`.
+- Give the SSH deploy user permission to run Docker and write to `DEPLOY_PATH`.
 - Create the shared network with `docker network create proxy`.
-- Create `/var/www/paspapan-compose/.env` with production settings, including `APP_KEY`, `APP_URL`, `DB_PASSWORD`, `DB_DATABASE`, and `DB_USERNAME`. The workflow preserves this file and never syncs it from GitHub.
 
-Create a GitHub Environment named `production`, restrict deployments to `main-vps`, and add these Environment secrets:
+Create a GitHub Environment named `production`. Add these Environment variables:
+
+| Variable | Value |
+| --- | --- |
+| `USER` | SSH deploy username, usually `deploy-apps` |
+| `DEPLOY_PATH` | Absolute remote application directory |
+| `APP_DOMAIN` | Public hostname only, without scheme, port, or path |
+| `DB_DATABASE` | PostgreSQL database name; defaults to `paspapan` |
+| `DB_USERNAME` | PostgreSQL user; defaults to `paspapan` |
+| `APP_NAME` | Optional application name; defaults to `PasPapan` |
+| `APP_TIMEZONE` | Optional timezone; defaults to `Asia/Jakarta` |
+
+Add these Environment secrets:
 
 | Secret | Value |
 | --- | --- |
 | `HOST` | VPS hostname or IP, without a scheme or port |
-| `USER` | SSH deploy username |
 | `SSH_KEY` | Private SSH key whose public key is in the deploy user's `authorized_keys` |
 | `SSH_KNOWN_HOSTS` | Preverified `known_hosts` line(s) for the VPS; verify the fingerprint out of band before saving |
+| `APP_KEY` | Stable Laravel application key |
+| `DB_PASSWORD` | PostgreSQL password |
+| `MAIL_PASSWORD` | Optional; only used when SMTP is enabled |
 
-The workflow uses SSH port 22. It deploys automatically after CI passes on a push to `main-vps`; manual dispatch is also limited to `main-vps`. The job uses the `production` Environment, so its branch policy and any required reviewer rules apply before deployment starts.
+`APP_URL` is generated as `https://<APP_DOMAIN>`. If SMTP is needed, set `MAIL_MAILER=smtp` and configure the related host, port, username, and sender Environment variables. Keep `APP_KEY` stable across deploys. The workflow uses SSH port 22 and the `production` Environment's branch policy and reviewer rules.

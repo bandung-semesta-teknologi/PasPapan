@@ -68,6 +68,8 @@ services:
     build:
       context: .
       target: web
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN in .env}
     restart: unless-stopped
     ports:
       - "127.0.0.1:${APP_HTTP_PORT:-8080}:80"
@@ -82,7 +84,7 @@ services:
       timeout: 5s
       retries: 3
     networks:
-      - php
+      php: {}
       proxy:
         aliases:
           - paspapan
