@@ -2,9 +2,27 @@
 
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
+use Tests\TestCase;
+
+function readEnterprisePackagingSource(TestCase $testCase, string $relativePath): string
+{
+    $path = base_path($relativePath);
+
+    if (! is_file($path)) {
+        $testCase->markTestSkipped('Enterprise packaging source is private and is not present in this checkout.');
+    }
+
+    $source = file_get_contents($path);
+
+    if (! is_string($source)) {
+        throw new RuntimeException("Unable to read enterprise packaging source: {$relativePath}");
+    }
+
+    return $source;
+}
 
 test('toko pos addon is included in enterprise obfuscator build list', function (): void {
-    $buildScript = file_get_contents(base_path('secure_tools/build_enterprise.php'));
+    $buildScript = readEnterprisePackagingSource($this, 'secure_tools/build_enterprise.php');
 
     expect($buildScript)
         ->toContain('../app/Livewire/Admin/TokoPosAddon')
@@ -24,7 +42,7 @@ test('toko pos addon is included in enterprise obfuscator build list', function 
 });
 
 test('enterprise obfuscator does not promote secured artifacts into source files', function (): void {
-    $buildScript = file_get_contents(base_path('secure_tools/build_enterprise.php'));
+    $buildScript = readEnterprisePackagingSource($this, 'secure_tools/build_enterprise.php');
 
     expect($buildScript)
         ->toContain('promoteEnterpriseTargetToSource')
@@ -67,7 +85,7 @@ PHP,
 });
 
 test('toko pos addon is included in license generator feature catalog', function (): void {
-    $licenseGenerator = file_get_contents(base_path('secure_tools/license_generator.php'));
+    $licenseGenerator = readEnterprisePackagingSource($this, 'secure_tools/license_generator.php');
 
     expect($licenseGenerator)
         ->toContain("'toko_pos'")
@@ -79,7 +97,7 @@ test('toko pos addon is included in license generator feature catalog', function
 });
 
 test('license generator treats db persistence and email delivery as optional integrations', function (): void {
-    $licenseGenerator = file_get_contents(base_path('secure_tools/license_generator.php'));
+    $licenseGenerator = readEnterprisePackagingSource($this, 'secure_tools/license_generator.php');
 
     expect($licenseGenerator)
         ->toContain('class_exists(LicensePurchase::class)')
