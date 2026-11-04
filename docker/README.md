@@ -73,10 +73,6 @@ Create a GitHub Environment named `production`. Add these Environment variables:
 | `USER` | SSH deploy username, usually `deploy-apps` |
 | `DEPLOY_PATH` | Absolute remote application directory |
 | `APP_DOMAIN` | Public hostname only, without scheme, port, or path |
-| `DB_DATABASE` | PostgreSQL database name; defaults to `paspapan` |
-| `DB_USERNAME` | PostgreSQL user; defaults to `paspapan` |
-| `APP_NAME` | Optional application name; defaults to `PasPapan` |
-| `APP_TIMEZONE` | Optional timezone; defaults to `Asia/Jakarta` |
 
 Add these Environment secrets:
 
@@ -85,8 +81,6 @@ Add these Environment secrets:
 | `HOST` | VPS hostname or IP, without a scheme or port |
 | `SSH_KEY` | Private SSH key whose public key is in the deploy user's `authorized_keys` |
 | `SSH_KNOWN_HOSTS` | Preverified `known_hosts` line(s) for the VPS; verify the fingerprint out of band before saving |
-| `APP_KEY` | Stable Laravel application key |
-| `DB_PASSWORD` | PostgreSQL password |
-| `MAIL_PASSWORD` | Optional; only used when SMTP is enabled |
+| `DEPLOY_ENV` | Multiline production `.env` contents, including `APP_KEY`, `DB_PASSWORD`, and database settings |
 
-`APP_URL` is generated as `https://<APP_DOMAIN>`. If SMTP is needed, set `MAIL_MAILER=smtp` and configure the related host, port, username, and sender Environment variables. Keep `APP_KEY` stable across deploys. The workflow uses SSH port 22 and the `production` Environment's branch policy and reviewer rules.
+The workflow writes `APP_DOMAIN` and `APP_URL=https://<APP_DOMAIN>` from the Environment variable, overriding those keys if present in `DEPLOY_ENV`. Keep `APP_KEY` stable across deploys. Put optional SMTP configuration, including `MAIL_PASSWORD`, in `DEPLOY_ENV`. The workflow uses SSH port 22 and the `production` Environment's branch policy and reviewer rules.
