@@ -28,7 +28,7 @@ jobs:
       cancel-in-progress: false
 
     env:
-      DEPLOY_PATH: /var/www/paspapan-compose
+      DEPLOY_PATH: /opt/apps/paspapan-absensi
 
     steps:
       - name: Check out the tested commit
@@ -47,11 +47,25 @@ jobs:
           DEPLOY_HOST: ${{ secrets.HOST }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
+          if [[ -z "$DEPLOY_HOST" ]]; then
+            echo "::error::GitHub secret HOST is empty or unavailable to the production environment."
+            exit 1
+          fi
+
+          if [[ -z "$SSH_KNOWN_HOSTS" ]]; then
+            echo "::error::GitHub secret SSH_KNOWN_HOSTS is empty or unavailable to the production environment."
+            exit 1
+          fi
+
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/known_hosts"
-          ssh-keygen -F "$DEPLOY_HOST" -f "$HOME/.ssh/known_hosts" >/dev/null
+
+          if ! ssh-keygen -F "$DEPLOY_HOST" -f "$HOME/.ssh/known_hosts" >/dev/null; then
+            echo "::error::SSH_KNOWN_HOSTS has no host-key entry matching HOST. Store a known_hosts line for the same host (without a username)."
+            exit 1
+          fi
 
       - name: Check deployment host prerequisites
         env:
