@@ -1339,8 +1339,20 @@ const getCurrentRelativeUrl = () =>
 const normalizeRelativeUrl = (target) => {
     try {
         const url = new URL(target, window.location.origin);
+        const isWebProtocol = ["http:", "https:"].includes(url.protocol);
+        const isSameOriginAppProtocol =
+            url.protocol === window.location.protocol &&
+            !["file:", "javascript:", "data:"].includes(url.protocol);
+
+        if (
+            url.origin !== window.location.origin ||
+            (!isWebProtocol && !isSameOriginAppProtocol)
+        ) {
+            return "/home";
+        }
+
         return `${url.pathname}${url.search}${url.hash}`;
-    } catch (error) {
+    } catch {
         return "/home";
     }
 };
@@ -1391,6 +1403,9 @@ const restoreFromOfflinePage = () => {
         "/home";
 
     sessionStorage.removeItem(OFFLINE_RETURN_KEY);
+    // The helper accepts only same-origin web or app URLs and returns a relative path.
+    // Semgrep cannot follow that validation through the helper's return value.
+    // nosemgrep: javascript.browser.security.open-redirect.js-open-redirect
     window.location.replace(normalizeRelativeUrl(returnTo));
 };
 
