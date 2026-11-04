@@ -36,7 +36,7 @@ The production-safe seeder does not create the default bootstrap admin accounts 
 
 ## Reverse proxy
 
-The `web` Caddy service joins the external Docker network named `proxy` and has the network alias `paspapan`. Its Caddyfile serves only `http://{$APP_DOMAIN}`, serves public assets, and forwards PHP requests to PHP-FPM at `app:9000`. Configure the existing public reverse proxy attached to `proxy` with the same hostname and use `paspapan:80` as its upstream. For another Caddy service, use:
+The `web` Caddy service joins the external Docker network named `proxy` and has the network alias `paspapan`. Its Caddyfile serves only `http://{$APP_DOMAIN}`, serves public assets, and forwards PHP requests to PHP-FPM at `paspapan-php-fpm:9000`. This alias is scoped to the private `php` network to avoid service-name collisions with other applications on `proxy`. Configure the existing public reverse proxy attached to `proxy` with the same hostname and use `paspapan:80` as its upstream. For another Caddy service, use:
 
 ```caddyfile
 your-domain.example {

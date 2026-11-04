@@ -59,9 +59,11 @@ services:
       retries: 5
       start_period: 120s
     networks:
-      - database
-      - php
-      - egress
+      database: {}
+      php:
+        aliases:
+          - paspapan-php-fpm
+      egress: {}
 
   web:
     image: ${COMPOSE_PROJECT_NAME:-paspapan}-web:local

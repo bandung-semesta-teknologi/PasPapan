@@ -8,7 +8,7 @@ http://{$APP_DOMAIN} {
 
 	handle {
 		root * /var/www/html/public
-		php_fastcgi app:9000
+		php_fastcgi paspapan-php-fpm:9000
 		file_server
 	}
 }
