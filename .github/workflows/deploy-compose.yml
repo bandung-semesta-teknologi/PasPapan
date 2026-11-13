@@ -14,12 +14,10 @@ jobs:
   deploy:
     name: Deploy Docker Compose to production
     if: >
-      (github.event_name == 'workflow_dispatch' &&
-       github.ref == 'refs/heads/main-vps') ||
+      github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success' &&
        github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'main-vps' &&
        github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     environment:
@@ -29,7 +27,9 @@ jobs:
       cancel-in-progress: false
 
     env:
-      DEPLOY_PATH: /var/www/paspapan-compose
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      DEPLOY_USER: ${{ vars.USER }}
+      APP_DOMAIN: ${{ vars.APP_DOMAIN }}
 
     steps:
       - name: Check out the tested commit
@@ -48,28 +48,97 @@ jobs:
           DEPLOY_HOST: ${{ secrets.HOST }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
+          if [[ -z "$DEPLOY_HOST" ]]; then
+            echo "::error::GitHub secret HOST is empty or unavailable to the production environment."
+            exit 1
+          fi
+
+          if [[ -z "$SSH_KNOWN_HOSTS" ]]; then
+            echo "::error::GitHub secret SSH_KNOWN_HOSTS is empty or unavailable to the production environment."
+            exit 1
+          fi
+
           mkdir -p "$HOME/.ssh"
           chmod 700 "$HOME/.ssh"
           printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/known_hosts"
-          ssh-keygen -F "$DEPLOY_HOST" -f "$HOME/.ssh/known_hosts" >/dev/null
+
+          if ! ssh-keygen -F "$DEPLOY_HOST" -f "$HOME/.ssh/known_hosts" >/dev/null; then
+            echo "::error::SSH_KNOWN_HOSTS has no host-key entry matching HOST. Store a known_hosts line for the same host (without a username)."
+            exit 1
+          fi
 
       - name: Check deployment host prerequisites
         env:
           DEPLOY_HOST: ${{ secrets.HOST }}
-          DEPLOY_USER: ${{ secrets.USER }}
         run: |
+          if [[ -z "$DEPLOY_PATH" ]]; then
+            echo "::error::Set DEPLOY_PATH as a variable in the production environment."
+            exit 1
+          fi
+
+          if [[ -z "$DEPLOY_USER" ]]; then
+            echo "::error::Set USER as a variable in the production environment."
+            exit 1
+          fi
+
+          if [[ -z "$APP_DOMAIN" || ! "$APP_DOMAIN" =~ ^[A-Za-z0-9.-]+$ ]]; then
+            echo "::error::Set APP_DOMAIN as a bare domain name in the production environment (without scheme, port, or path)."
+            exit 1
+          fi
+
           ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "mkdir -p '${DEPLOY_PATH}' && \
-             command -v rsync >/dev/null && \
-             docker compose version && \
-             docker network inspect proxy >/dev/null && \
-             test -f '${DEPLOY_PATH}/.env'"
+            "set -eu
+             mkdir -p '${DEPLOY_PATH}'
+             command -v rsync >/dev/null || { echo 'rsync is not installed or unavailable to ${DEPLOY_USER}.' >&2; exit 1; }
+             docker compose version
+             docker network inspect proxy >/dev/null || { echo 'Docker is inaccessible or the external proxy network is missing.' >&2; exit 1; }"
+
+      - name: Write production environment file
+        env:
+          DEPLOY_HOST: ${{ secrets.HOST }}
+          DEPLOY_ENV_FILE: ${{ secrets.DEPLOY_ENV }}
+        run: |
+          if [[ -z "$DEPLOY_ENV_FILE" ]]; then
+            echo "::error::Set the multiline DEPLOY_ENV secret in the production environment."
+            exit 1
+          fi
+
+          python3 - <<'PY' | ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "umask 077 && cat > '${DEPLOY_PATH}/.env' && chmod 600 '${DEPLOY_PATH}/.env'"
+          import os
+          import re
+          import sys
+
+          source = os.environ["DEPLOY_ENV_FILE"]
+          parsed = {}
+          for line in source.splitlines():
+              stripped = line.strip()
+              if not stripped or stripped.startswith("#"):
+                  continue
+              stripped = re.sub(r"^export\s+", "", stripped)
+              if "=" in stripped:
+                  key, value = stripped.split("=", 1)
+                  parsed[key.strip()] = value.strip().strip("\"'")
+
+          missing = [key for key in ("APP_KEY", "DB_PASSWORD") if not parsed.get(key)]
+          if missing:
+              sys.stderr.write(f"::error::DEPLOY_ENV is missing required values: {', '.join(missing)}.\n")
+              raise SystemExit(1)
+
+          domain = os.environ["APP_DOMAIN"]
+          lines = [
+              line for line in source.splitlines()
+              if not re.match(r"^\s*(?:export\s+)?(?:APP_DOMAIN|APP_URL)\s*=", line)
+          ]
+          sys.stdout.write("\n".join(lines).rstrip() + "\n")
+          sys.stdout.write(f'APP_DOMAIN="{domain}"\n')
+          sys.stdout.write(f'APP_URL="https://{domain}"\n')
+          PY
 
       - name: Upload source and Compose files
         env:
           DEPLOY_HOST: ${{ secrets.HOST }}
-          DEPLOY_USER: ${{ secrets.USER }}
         run: |
           rsync -az --delete \
             --exclude='/.env' \
@@ -94,7 +163,6 @@ jobs:
       - name: Build and start the Compose stack
         env:
           DEPLOY_HOST: ${{ secrets.HOST }}
-          DEPLOY_USER: ${{ secrets.USER }}
         run: |
           if ! ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "cd '${DEPLOY_PATH}' && \

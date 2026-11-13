@@ -1,4 +1,4 @@
-:80 {
+http://{$APP_DOMAIN} {
 	encode zstd gzip
 
 	handle_path /storage/* {
@@ -8,7 +8,9 @@
 
 	handle {
 		root * /var/www/html/public
-		php_fastcgi app:9000
+		php_fastcgi paspapan-php-fpm:9000 {
+			trusted_proxies private_ranges
+		}
 		file_server
 	}
 }
