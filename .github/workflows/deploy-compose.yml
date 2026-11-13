@@ -98,6 +98,13 @@ jobs:
         env:
           DEPLOY_HOST: ${{ secrets.HOST }}
           DEPLOY_ENV_FILE: ${{ secrets.DEPLOY_ENV }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_ENCRYPTION: ${{ secrets.MAIL_ENCRYPTION }}
+          MAIL_FROM_ADDRESS: ${{ secrets.MAIL_FROM_ADDRESS }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
         run: |
           if [[ -z "$DEPLOY_ENV_FILE" ]]; then
             echo "::error::Set the multiline DEPLOY_ENV secret in the production environment."
@@ -126,12 +133,38 @@ jobs:
               sys.stderr.write(f"::error::DEPLOY_ENV is missing required values: {', '.join(missing)}.\n")
               raise SystemExit(1)
 
+          # Individual SMTP secrets override DEPLOY_ENV when MAIL_HOST is set.
+          overrides = {}
+          if os.environ.get("MAIL_HOST"):
+              overrides = {
+                  "MAIL_MAILER": "smtp",
+                  "MAIL_URL": "",
+                  "MAIL_HOST": os.environ["MAIL_HOST"],
+                  "MAIL_PORT": os.environ.get("MAIL_PORT") or "587",
+                  "MAIL_USERNAME": os.environ.get("MAIL_USERNAME", ""),
+                  "MAIL_PASSWORD": os.environ.get("MAIL_PASSWORD", ""),
+                  "MAIL_ENCRYPTION": os.environ.get("MAIL_ENCRYPTION") or "tls",
+                  "MAIL_FROM_ADDRESS": os.environ.get("MAIL_FROM_ADDRESS", ""),
+                  "MAIL_FROM_NAME": os.environ.get("MAIL_FROM_NAME") or "PasPapan",
+              }
+              if not overrides["MAIL_FROM_ADDRESS"]:
+                  sys.stderr.write("::error::Set MAIL_FROM_ADDRESS when using the MAIL_HOST secret.\n")
+                  raise SystemExit(1)
+              if any("\n" in value or "\r" in value for value in overrides.values()):
+                  sys.stderr.write("::error::SMTP secrets must be single-line values.\n")
+                  raise SystemExit(1)
+
           domain = os.environ["APP_DOMAIN"]
+          replaced = "|".join(("APP_DOMAIN", "APP_URL", *overrides))
           lines = [
               line for line in source.splitlines()
-              if not re.match(r"^\s*(?:export\s+)?(?:APP_DOMAIN|APP_URL)\s*=", line)
+              if not re.match(rf"^\s*(?:export\s+)?(?:{replaced})\s*=", line)
           ]
           sys.stdout.write("\n".join(lines).rstrip() + "\n")
+          for key, value in overrides.items():
+              # Single quotes prevent Compose from expanding dollars in passwords.
+              escaped = value.replace("'", "\\'")
+              sys.stdout.write(f"{key}='{escaped}'\n")
           sys.stdout.write(f'APP_DOMAIN="{domain}"\n')
           sys.stdout.write(f'APP_URL="https://{domain}"\n')
           PY
