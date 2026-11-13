@@ -138,7 +138,6 @@ jobs:
           if os.environ.get("MAIL_HOST"):
               overrides = {
                   "MAIL_MAILER": "smtp",
-                  "MAIL_URL": "",
                   "MAIL_HOST": os.environ["MAIL_HOST"],
                   "MAIL_PORT": os.environ.get("MAIL_PORT") or "587",
                   "MAIL_USERNAME": os.environ.get("MAIL_USERNAME", ""),
@@ -155,7 +154,7 @@ jobs:
                   raise SystemExit(1)
 
           domain = os.environ["APP_DOMAIN"]
-          replaced = "|".join(("APP_DOMAIN", "APP_URL", *overrides))
+          replaced = "|".join(("APP_DOMAIN", "APP_URL", *overrides, *(("MAIL_URL",) if overrides else ())))
           lines = [
               line for line in source.splitlines()
               if not re.match(rf"^\s*(?:export\s+)?(?:{replaced})\s*=", line)

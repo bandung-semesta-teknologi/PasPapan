@@ -57,7 +57,7 @@ Workflow `.github/workflows/deploy-compose.yml` mengambil konfigurasi SMTP dari 
 | `MAIL_FROM_ADDRESS` | Alamat pengirim, wajib ketika `MAIL_HOST` diisi |
 | `MAIL_FROM_NAME` | Nama pengirim, default `PasPapan` |
 
-Saat `MAIL_HOST` diisi, workflow menetapkan `MAIL_MAILER=smtp`, mengosongkan `MAIL_URL`, dan mengganti seluruh konfigurasi SMTP di atas dalam `.env` produksi. Nilai secret harus satu baris dan diisi langsung tanpa tanda kutip pembungkus. Jika `MAIL_HOST` tidak diisi, konfigurasi email tetap berasal dari secret multiline `DEPLOY_ENV`.
+Saat `MAIL_HOST` diisi, workflow menetapkan `MAIL_MAILER=smtp`, menghapus `MAIL_URL`, dan mengganti seluruh konfigurasi SMTP di atas dalam `.env` produksi. Nilai secret harus satu baris dan diisi langsung tanpa tanda kutip pembungkus. Jika `MAIL_HOST` tidak diisi, konfigurasi email tetap berasal dari secret multiline `DEPLOY_ENV`.
 
 Secret `DEPLOY_ENV` tetap wajib untuk konfigurasi aplikasi lainnya, termasuk `APP_KEY` dan `DB_PASSWORD`. File `.env` dikirim melalui SSH dengan permission `600` dan dibaca oleh container `app`, `queue`, dan `scheduler`. Jalankan ulang workflow **Deploy with Docker Compose** setelah memperbarui secret.
 
