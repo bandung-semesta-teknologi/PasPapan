@@ -11,10 +11,8 @@ use App\Http\Controllers\System\RootRedirectController;
 use App\Http\Controllers\System\TestErrorController;
 use App\Http\Controllers\System\VercelMaintenanceController;
 use App\Models\SystemBackupRun;
-use App\Support\Helpers;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Route;
-use Livewire\Livewire;
 
 // Test Error Views. Keep this helper out of production so arbitrary users cannot
 // trigger dedicated error responses on demand.
@@ -59,16 +57,6 @@ Route::middleware([
             ->middleware('feature.lock:system_maintenance,admin.system_maintenance.view,admin.dashboard')
             ->can('viewAny', SystemBackupRun::class);
     });
-});
-
-Livewire::setUpdateRoute(function ($handle) {
-    return Route::post(Helpers::getNonRootBaseUrlPath().'/livewire/update', $handle);
-});
-
-Livewire::setScriptRoute(function ($handle) {
-    $path = config('app.debug') ? '/livewire/livewire.js' : '/livewire/livewire.min.js';
-
-    return Route::get(Helpers::getNonRootBaseUrlPath().$path, $handle);
 });
 
 Route::controller(LanguageController::class)->group(function () {
