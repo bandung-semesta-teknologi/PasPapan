@@ -2257,7 +2257,7 @@
     }
 
     .guest-brand__logo {
-        @apply h-9 w-9 rounded-full object-cover shadow-none ring-1 ring-white/80 dark:ring-slate-800;
+        @apply h-9 w-9 object-contain shadow-none;
     }
 
     .guest-brand__name {

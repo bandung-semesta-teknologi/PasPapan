@@ -11,7 +11,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? $appName ?? config('app.name', 'Laravel') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/icons/favicon-circle.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/icons/favicon-hanoman.png') }}">
 
     <!-- PWA -->
     <link rel="manifest" href="{{ asset('manifest.json') }}">

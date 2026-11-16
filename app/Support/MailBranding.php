@@ -40,7 +40,7 @@ class MailBranding
             }
         }
 
-        return public_path('images/icons/logo.jpeg');
+        return public_path('hanoman-logo.png');
     }
 
     public static function logoUrl(): string
@@ -48,7 +48,7 @@ class MailBranding
         $path = static::logoPath();
         $relativePath = str_starts_with($path, public_path())
             ? ltrim(str_replace(public_path(), '', $path), DIRECTORY_SEPARATOR)
-            : 'images/icons/logo.jpeg';
+            : 'hanoman-logo.png';
 
         return url(str_replace(DIRECTORY_SEPARATOR, '/', $relativePath));
     }
@@ -103,6 +103,7 @@ class MailBranding
     private static function logoCandidates(): array
     {
         return [
+            public_path('hanoman-logo.png'),
             public_path('images/icons/logo.jpeg'),
             public_path('images/icons/logo.jpg'),
             public_path('images/icons/logo.png'),

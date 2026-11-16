@@ -110,7 +110,7 @@
             width: 42px;
             border-radius: 14px;
             display: block;
-            object-fit: cover;
+            object-fit: contain;
             border: 1px solid rgba(87, 148, 74, 0.15);
             box-shadow: 0 16px 28px -24px rgba(34, 64, 41, 0.45);
         }

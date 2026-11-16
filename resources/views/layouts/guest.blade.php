@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $appName ?? config('app.name', 'Laravel') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/icons/favicon-circle.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/icons/favicon-hanoman.png') }}">
 
     <!-- PWA iOS & Splash -->
     <meta name="theme-color" content="#ffffff">
@@ -108,7 +108,7 @@
 
         <div class="guest-topbar">
             <a href="{{ url('/') }}" class="guest-brand" aria-label="{{ config('app.name') }}">
-                <img src="{{ asset('images/icons/logo.jpeg') }}" class="guest-brand__logo" alt="{{ config('app.name') }}">
+                <img src="{{ asset('hanoman-logo.png') }}" class="guest-brand__logo" alt="{{ config('app.name') }}">
                 <span class="guest-brand__name">{{ config('app.name') }}</span>
             </a>
 

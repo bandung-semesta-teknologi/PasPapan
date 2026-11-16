@@ -153,8 +153,8 @@
                     <table class="company-info-table">
                         <tr>
                             <td class="logo-cell">
-                                @if (file_exists(public_path('images/icons/logo.png')))
-                                    <img src="{{ public_path('images/icons/logo.png') }}"
+                                @if (file_exists(public_path('hanoman-logo.png')))
+                                    <img src="{{ public_path('hanoman-logo.png') }}"
                                         alt="{{ \App\Models\Setting::getValue('app.company_name', config('app.name')) }}"
                                         style="height: 45px; width: auto;">
                                 @endif

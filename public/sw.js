@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paspapan-v2.14-admin-permission-debug';
+const CACHE_NAME = 'paspapan-v2.15-hanoman-branding';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache on install
