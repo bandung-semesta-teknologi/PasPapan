@@ -198,10 +198,10 @@ jobs:
         run: |
           if ! ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "cd '${DEPLOY_PATH}' && \
-             docker compose build --pull app web && \
-             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 600 && \
-             docker compose ps"; then
+             docker compose -f compose.yaml -f compose.override.yaml build --pull app web && \
+             docker compose -f compose.yaml -f compose.override.yaml up -d --no-build --remove-orphans --wait --wait-timeout 600 && \
+             docker compose -f compose.yaml -f compose.override.yaml ps"; then
             ssh -o StrictHostKeyChecking=yes "${DEPLOY_USER}@${DEPLOY_HOST}" \
-              "cd '${DEPLOY_PATH}' && docker compose ps && docker compose logs --tail=100 app web queue scheduler db" || true
+              "cd '${DEPLOY_PATH}' && docker compose -f compose.yaml -f compose.override.yaml ps && docker compose -f compose.yaml -f compose.override.yaml logs --tail=100 app web queue scheduler db" || true
             exit 1
           fi

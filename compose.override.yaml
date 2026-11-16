@@ -2,3 +2,10 @@ services:
   db:
     ports:
       - "127.0.0.1:5433:5432"
+    networks:
+      - database
+      - db_access
+
+networks:
+  db_access:
+    driver: bridge
