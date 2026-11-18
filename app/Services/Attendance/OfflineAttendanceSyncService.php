@@ -95,6 +95,7 @@ class OfflineAttendanceSyncService
                 faceVerificationFailed: (bool) ($item['face_verification_failed'] ?? false),
                 faceVerificationSkipped: (bool) ($item['face_verification_skipped'] ?? false),
                 qrTokenRetries: (int) ($item['qr_token_retries'] ?? 0),
+                activityDetails: $item['activity_details'] ?? null,
             );
 
             if (! ($result['ok'] ?? false)) {

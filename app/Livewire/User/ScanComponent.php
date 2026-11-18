@@ -79,7 +79,7 @@ class ScanComponent extends Component
         );
     }
 
-    public function scan(string $barcode, ?float $lat = null, ?float $lng = null, ?string $photo = null, ?string $note = null)
+    public function scan(string $barcode, ?float $lat = null, ?float $lng = null, ?string $photo = null, ?string $note = null, ?string $activityDetails = null)
     {
         $this->photo = $photo;
 
@@ -94,6 +94,7 @@ class ScanComponent extends Component
             barcodePayload: $barcode,
             photo: $this->photo,
             note: $note,
+            activityDetails: $activityDetails,
             gracePeriod: (int) $this->gracePeriod,
             gpsAccuracy: $this->gpsAccuracy,
             gpsVariance: $this->gpsVariance,

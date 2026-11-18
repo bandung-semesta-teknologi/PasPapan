@@ -16,6 +16,7 @@ use Ballen\Distical\Calculator as DistanceCalculator;
 use Ballen\Distical\Entities\LatLong;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
 
 class AttendanceScanService
 {
@@ -92,6 +93,7 @@ class AttendanceScanService
         ?float $gpsAccuracy,
         ?float $gpsVariance,
         array $riskContext = [],
+        ?string $activityDetails = null,
     ): array {
         $validation = $this->validateScan($user, $shiftId, $coords, $barcodePayload);
 
@@ -100,6 +102,15 @@ class AttendanceScanService
                 'ok' => false,
                 'message' => $validation,
             ];
+        }
+
+        $activityValidation = Validator::make(
+            ['activity_details' => $activityDetails],
+            ['activity_details' => ['nullable', 'string', 'max:5000']],
+        );
+
+        if ($activityValidation->fails()) {
+            return ['ok' => false, 'message' => $activityValidation->errors()->first('activity_details')];
         }
 
         if ((int) Setting::getValue('feature.require_photo', 1) === 1 && empty($photo)) {
@@ -144,6 +155,7 @@ class AttendanceScanService
                 coords: $coords,
                 photo: $photo,
                 note: $note,
+                activityDetails: $activityDetails,
                 gpsAccuracy: $gpsAccuracy,
                 gpsVariance: $gpsVariance,
                 distance: $distance,
@@ -262,6 +274,7 @@ class AttendanceScanService
         array $coords,
         ?string $photo,
         ?string $note,
+        ?string $activityDetails,
         ?float $gpsAccuracy,
         ?float $gpsVariance,
         int $distance,
@@ -323,6 +336,7 @@ class AttendanceScanService
             'gps_variance_out' => $gpsVariance,
             'attachment' => json_encode($attachments),
             'note' => $note ?: $attendance->note,
+            'activity_details' => filled($activityDetails) ? trim($activityDetails) : null,
             'is_suspicious' => $isSuspicious || $risk['score'] >= 25,
             'suspicious_reason' => $isSuspicious ? implode('; ', array_unique($suspiciousReasons)) : null,
             'risk_score' => $risk['score'],

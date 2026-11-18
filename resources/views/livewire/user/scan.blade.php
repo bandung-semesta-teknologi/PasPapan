@@ -2507,6 +2507,28 @@
                         }
                     }
 
+                    const activityResult = await Swal.fire({
+                        title: @js(__('Activity details')),
+                        input: 'textarea',
+                        inputLabel: @js(__('Describe your activities today (optional)')),
+                        inputPlaceholder: @js(__('Example: Completed reports and coordinated with the team.')),
+                        inputAttributes: {
+                            maxlength: '5000',
+                            'aria-label': @js(__('Activity details'))
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: @js(__('Save & Check Out')),
+                        cancelButtonText: @js(__('Cancel')),
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    });
+
+                    if (!activityResult.isConfirmed) {
+                        window.location.reload();
+                        return;
+                    }
+                    const activityDetails = activityResult.value.trim() || null;
+
                     // Face Verification for Check Out (if user has registered face)
                     if (state.requiresFaceVerification && !state.isSelfieMode) {
                         try {
@@ -2536,7 +2558,7 @@
                                 callback: async () => {
                                     const result = await window.Livewire.find(
                                         '{{ $_instance->getId() }}').call('scan',
-                                        code, null, null, photo, note);
+                                        code, null, null, photo, note, activityDetails);
                                     handleScanResult(result, scanner, startScanning);
                                 }
                             }
@@ -2545,7 +2567,7 @@
                     }
 
                     const result = await window.Livewire.find('{{ $_instance->getId() }}').call('scan',
-                        code, null, null, photo, note);
+                        code, null, null, photo, note, activityDetails);
                     handleScanResult(result, scanner, startScanning);
                     return;
                 }

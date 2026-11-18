@@ -41,6 +41,7 @@ class BarcodeScanController extends Controller
                 faceVerificationFailed: (bool) ($validated['face_verification_failed'] ?? false),
                 faceVerificationSkipped: (bool) ($validated['face_verification_skipped'] ?? false),
                 qrTokenRetries: (int) ($validated['qr_token_retries'] ?? 0),
+                activityDetails: $validated['activity_details'] ?? null,
             );
 
             if (! $result['ok']) {
