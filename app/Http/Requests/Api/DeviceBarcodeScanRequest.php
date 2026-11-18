@@ -17,6 +17,7 @@ class DeviceBarcodeScanRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'activity_details' => ['nullable', 'string', 'max:5000'],
             'barcode_data' => ['required', 'string', 'max:2048'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],

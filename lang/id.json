@@ -5019,5 +5019,8 @@
     "Monthly Report Reconciliation": "Rekonsiliasi Laporan Bulanan",
     "No monthly reconciliation yet.": "Belum ada rekonsiliasi bulanan.",
     "Cash/Bank Reconciliation": "Rekonsiliasi Kas/Bank",
-    "No cash/bank reconciliation yet.": "Belum ada rekonsiliasi kas/bank."
+    "No cash/bank reconciliation yet.": "Belum ada rekonsiliasi kas/bank.",
+    "Activity details": "Detail aktivitas",
+    "Describe your activities today (optional)": "Tuliskan aktivitas yang dikerjakan hari ini (opsional)",
+    "Example: Completed reports and coordinated with the team.": "Contoh: Menyelesaikan laporan dan koordinasi dengan tim."
 }

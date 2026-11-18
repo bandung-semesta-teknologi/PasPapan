@@ -44,6 +44,7 @@ class Attendance extends Model
         'date',
         'time_in',
         'time_out',
+        'activity_details',
         'shift_id',
         'latitude_in',
         'longitude_in',

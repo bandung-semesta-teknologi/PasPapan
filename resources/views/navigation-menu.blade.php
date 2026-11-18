@@ -11,7 +11,6 @@
     $reportingLocked = \App\Helpers\Editions::reportingLocked();
     $payrollLocked = \App\Helpers\Editions::payrollLocked();
     $cashAdvanceLocked = \App\Helpers\Editions::cashAdvanceLocked();
-    $analyticsLocked = \App\Helpers\Editions::analyticsLocked();
     $appraisalLocked = \App\Helpers\Editions::appraisalLocked();
     $assetLocked = \App\Helpers\Editions::assetLocked();
     $tokoPosLocked = \App\Helpers\Editions::tokoPosLocked();
@@ -108,14 +107,11 @@
                 ['type' => 'link', 'label' => __('Schedules (Roster)'), 'href' => route('admin.schedules'), 'active' => $isRouteActive('admin.schedules'), 'visible' => $can('manageSchedules')],
                 ['type' => 'divider'],
                 [
-                    'type' => 'feature',
+                    'type' => 'link',
                     'label' => __('Analytics'),
                     'href' => route('admin.analytics'),
                     'active' => $isRouteActive('admin.analytics'),
-                    'locked' => $analyticsLocked,
-                    'lockTitle' => __('Analytics Locked'),
-                    'lockMessage' => __('This feature is available in the Enterprise Edition. Please upgrade.'),
-                    'visible' => $allowsAdminPermission('admin.analytics.view'),
+                    'visible' => $can('viewAnalyticsDashboard'),
                 ],
                 ['type' => 'divider'],
                 ['type' => 'link', 'label' => __('Holidays'), 'href' => route('admin.holidays'), 'active' => $isRouteActive('admin.holidays'), 'visible' => $can('manageHolidays')],

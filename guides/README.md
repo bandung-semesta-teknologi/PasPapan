@@ -30,6 +30,8 @@ Yang membuat `main-vps` lebih menarik dibanding branch `main`:
 | Kebutuhan | Baca |
 | --- | --- |
 | Mau tahu fitur PasPapan | [features.md](./features.md) |
+| Mau inventaris fitur enterprise dan cara penggunaannya | [enterprise-features-and-usage.md](./enterprise-features-and-usage.md) |
+| Mau mengembangkan prioritas Community Edition | [community-edition-priorities.md](./community-edition-priorities.md) |
 | Mau install di VPS | [deployment.md](./deployment.md) |
 | Mau operasikan queue, scheduler, backup, Reverb | [operations.md](./operations.md) |
 | Mau cek stack resmi | [modern-stack.md](./modern-stack.md) |

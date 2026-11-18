@@ -110,6 +110,14 @@
                     </div>
                 @endif
 
+                @if (!empty($currentAttendance['activity_details']))
+                    <div class="py-2">
+                        <x-forms.label for="activity_details" value="{{ __('Activity details') }}" />
+                        <x-forms.textarea id="activity_details" class="w-full"
+                            disabled>{{ $currentAttendance['activity_details'] }}</x-forms.textarea>
+                    </div>
+                @endif
+
                 {{-- Note --}}
                 @if (!empty($currentAttendance['note']))
                     <div class="py-2">

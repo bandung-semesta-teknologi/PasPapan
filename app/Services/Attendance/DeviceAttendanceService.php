@@ -39,6 +39,7 @@ class DeviceAttendanceService
         bool $faceVerificationFailed = false,
         bool $faceVerificationSkipped = false,
         int $qrTokenRetries = 0,
+        ?string $activityDetails = null,
     ): array {
         $scanContext = $this->dynamicBarcodeTokenService->resolveScannedBarcodeWithSource($barcodePayload);
         $barcode = $scanContext['barcode'];
@@ -92,6 +93,7 @@ class DeviceAttendanceService
             $faceVerificationSkipped,
             $qrTokenRetries,
             $barcodePayload,
+            $activityDetails,
         ): array {
             $attendance = Attendance::query()
                 ->where('user_id', $userId)
@@ -139,6 +141,7 @@ class DeviceAttendanceService
                 $attendance->fill([
                     'barcode_id' => $attendance->barcode_id,
                     'time_out' => $attendanceTime,
+                    'activity_details' => filled($activityDetails) ? trim($activityDetails) : null,
                     'latitude_out' => $latitude,
                     'longitude_out' => $longitude,
                     'accuracy_out' => $gpsAccuracy,

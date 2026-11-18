@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminRootRedirectController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Livewire\Admin\CommunityAnalyticsDashboard;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', AdminRootRedirectController::class)
@@ -12,7 +13,6 @@ Route::get('/dashboard', DashboardController::class)->name('admin.dashboard')->c
 Route::livewire('/command-center', 'admin.command-center')->name('admin.command-center')->can('viewCommandCenter');
 Route::livewire('/inbox', 'admin.manager-inbox')->name('admin.inbox')->can('accessAdminPanel');
 Route::livewire('/notifications', 'admin.notifications-page')->name('admin.notifications')->can('manageAdminNotifications');
-enterprise_livewire_route('/analytics', 'admin.analytics-dashboard')
+Route::livewire('/analytics', CommunityAnalyticsDashboard::class)
     ->name('admin.analytics')
-    ->middleware('feature.lock:analytics,admin.analytics.view,admin.dashboard')
     ->can('viewAnalyticsDashboard');

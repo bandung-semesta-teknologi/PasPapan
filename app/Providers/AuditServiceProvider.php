@@ -18,8 +18,6 @@ use App\Models\User;
 use App\Observers\SensitiveModelAuditObserver;
 use App\Observers\SystemBackupRunObserver;
 use App\Services\Audit\CommunityAuditService;
-use App\Services\Audit\EnterpriseAuditService;
-use App\Support\EnterpriseRuntime;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Support\Facades\Event;
@@ -29,9 +27,7 @@ class AuditServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(AuditServiceInterface::class, function () {
-            return EnterpriseRuntime::resolve('audit', EnterpriseAuditService::class, new CommunityAuditService);
-        });
+        $this->app->singleton(AuditServiceInterface::class, CommunityAuditService::class);
     }
 
     public function boot(): void

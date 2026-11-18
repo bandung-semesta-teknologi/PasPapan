@@ -19,6 +19,7 @@ class DeviceOfflineAttendanceSyncRequest extends FormRequest
         return [
             'items' => ['required', 'array', 'min:1', 'max:20'],
             'items.*.client_uuid' => ['required', 'string', 'max:120'],
+            'items.*.activity_details' => ['nullable', 'string', 'max:5000'],
             'items.*.barcode_data' => ['required', 'string', 'max:2048'],
             'items.*.latitude' => ['required', 'numeric', 'between:-90,90'],
             'items.*.longitude' => ['required', 'numeric', 'between:-180,180'],
